@@ -267,11 +267,11 @@ namespace Exercise6
         /// </summary>
         public static IEnumerable<object> Task10()
         {
-            IEnumerable<object> result = Emps.Union(Emps.Select(e=> new { e.Ename,e.Job,e.HireDate}),
-            new List<Object>("brak wartosci",null,null));
+            var defaultValues = new[] { new { Ename = "Brak wartości", Job = (string)null, HireDate = (DateTime?)null } };
+            var result = Emps.Select(e => new { e.Ename, e.Job, e.HireDate })
+                .Union(defaultValues);
             return result;
         }
-
         /// <summary>
         /// Wykorzystując LINQ pobierz pracowników podzielony na departamenty pamiętając, że:
         /// 1. Interesują nas tylko departamenty z liczbą pracowników powyżej 1
@@ -285,10 +285,15 @@ namespace Exercise6
         /// </summary>
         public static IEnumerable<object> Task11()
         {
-            IEnumerable<object> result = null;
+            IEnumerable<object> result = Emps
+                .GroupBy(e => e.Deptno)
+                .Where(g => g.Count() > 1)
+                .Join(Depts,
+                    g => g.Key,
+                    d => d.Deptno,
+                    (g, d) => new { name = d.Dname, numOfEmployees = g.Count() });
             return result;
         }
-
         /// <summary>
         /// Napisz własną metodę rozszerzeń, która pozwoli skompilować się poniższemu fragmentowi kodu.
         /// Metodę dodaj do klasy CustomExtensionMethods, która zdefiniowana jest poniżej.
@@ -298,7 +303,7 @@ namespace Exercise6
         /// </summary>
         public static IEnumerable<Emp> Task12()
         {
-            IEnumerable<Emp> result = null;
+            IEnumerable<Emp> result =  Emps.method1();
             return result;
         }
 
@@ -311,8 +316,11 @@ namespace Exercise6
         /// </summary>
         public static int Task13(int[] arr)
         {
-            int result = 0;
-            //result=
+            int result = arr
+                .GroupBy(e => e)
+                .Where(g => g.Count() % 2 != 0)
+                .Select(g => g.Key)
+                .Single();
             return result;
         }
 
@@ -323,13 +331,19 @@ namespace Exercise6
         public static IEnumerable<Dept> Task14()
         {
             IEnumerable<Dept> result = null;
-            //result =
             return result;
         }
     }
 
     public static class CustomExtensionMethods
     {
-        //Put your extension methods here
+        public static IEnumerable<Emp> method1(this IEnumerable<Emp> emps)
+        {
+            var result = emps
+                .Where(e => emps.Any(e2 => e2.Mgr != null && e2.Mgr.Empno == e.Empno))
+                .OrderBy(e => e.Ename)
+                .ThenByDescending(e => e.Salary);
+            return result;
+        }
     }
 }
